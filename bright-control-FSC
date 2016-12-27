@@ -1,0 +1,54 @@
+#!/bin/bash
+
+SCREEN=$(xrandr | grep '*' -m1 | awk '{ print $1 }') #Seta a resolução padrão
+count=0 #Contagem pro fechamento do programa após duas tentativas de encontrar
+#o programa aberto
+defvar () {
+  HON=$(ps -e | grep -m1 hon-x86 | awk -F ' ' '{print $4}') #Variável que diz se
+  #o programa está aberto ou não
+  BRIGHT=$(xrandr --verbose | awk '/Brightness/ { print $2 }') #Brilho atual
+  WINDOW=$(echo $(xwininfo -id $(xdotool getactivewindow) -stats | \
+  # tamanho da janela atualmente em uso
+  egrep '(Width|Height):' | awk '{print $NF}') | sed -e 's/ /x/')
+}
+stb1 () { #Coloca o valor do brilho em xrandr como 1, na primeira saída
+  xrandr --output $(xrandr -q | grep " connected" -m1 | awk '{ print $1 }') \
+  --brightness 1
+}
+stb2 () { #Coloca o valor do brilho em xrandr como 2, na primeira saída
+    xrandr --output $(xrandr -q | grep " connected" -m1 | awk '{ print $1 }') \
+    --brightness 2
+  }
+checkscr () { #Faz 3 checagens para escolher se aumenta ou diminui o brilho
+#Se o jogo estiver aberto e em foco (tela cheia) com brilho diferente de 2, Seta
+#0 mesmo em 2, redefine as variáveis, espera 5 segundos e checa novamente
+if [ " $HON" != "" ] && [ "$WINDOW" == "$SCREEN" ] && [ "$BRIGHT" != "2" ];
+then
+  stb2 && sleep 5 && defvar && checkscr
+#Jogo aberto + Tela não cheia + brilho diferente de 2 põe o brilho em 1 (padrão)
+elif [ "$HON" != "" ] && [ "$WINDOW" != "$SCREEN" ] && [ "$BRIGHT" != "2" ];
+then
+  stb1 && sleep 5 && defvar && checkscr
+#Jogo aberto + tela não cheia + brilho diferente de 2 aguarda 5, define variá-
+#veis e faz a checagem novamente
+elif [ "$HON" != "" ] && [ "$WINDOW" != "$SCREEN" ] && [ "$BRIGHT" != "2" ];
+then
+  sleep 5 && defvar && checkhon
+fi
+}
+checkhon () { #Checa se o jogo está aberto
+  if [ "$HON" != "" ]; then
+    count=0 && checkscr
+#Se não estiver, e o valor de count for 2, fecha o programa
+  elif [ "$count" == "2" ]; then
+    exit 0
+#Se não estiver, e o valor de count não for 2, adiciona 1 à count, espera 10 seg
+#e refaz esta checagem
+  else
+    echo "Aguardando por HoN ..." && let "count+=1" && sleep 10 &&\
+     defvar && checkhon
+  fi
+
+}
+defvar
+checkhon

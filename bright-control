@@ -1,16 +1,24 @@
 #!/bin/bash
+#Define as variáveis usadas para  checagem dos parâmetros
 defvar () {
+#Variável responsável por conter o programa rodando ou não
   HON=$(ps -e | grep -m1 hon-x86 | awk -F ' ' '{print $4}')
+#Checa e armazena o brilho atual da saída padrão
   BRIGHT=$(xrandr --verbose | awk '/Brightness/ { print $2 }')
   checkhon
 }
+#Checa se o programa em questão está rodando, com base na variável $HON
 checkhon ()  {
+#Se o brilho for diferente de 1 e o jogo estiver fechado, colocar brilho
+# em 1.
     if [ "$BRIGHT" != "1.0" ] && [ "$HON" == "" ]; then
       stb1 && sleep 0.5 && checkhon2
     else
       sleep 0.5 && checkhon2
     fi  }
 checkhon2 () {
+#Se o brilho for diferente de 2 e o jogo estiver aberto, colocar brilho
+# em 2.
   if [ "$BRIGHT" != "2.0" ] && [ "$HON" != "" ]; then
     stb2 && sleep 0.5 && defvar
   else
@@ -19,11 +27,13 @@ checkhon2 () {
 }
 
 stb1 () {
-  xrandr --output $(xrandr -q | grep " connected" | awk '{ print $1 }') \
+#Configura o brilho para 1, com base no xrandr
+  xrandr --output $(xrandr -q | grep " connected" -m1 | awk '{ print $1 }') \
   --brightness 1
 }
 stb2 () {
-  xrandr --output $(xrandr -q | grep " connected" | awk '{ print $1 }') \
+#Configura o brilho para 2, com base no xrandr
+  xrandr --output $(xrandr -q | grep " connected" -m1 | awk '{ print $1 }') \
   --brightness 2
 }
 

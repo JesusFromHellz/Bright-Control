@@ -48,7 +48,6 @@ checkhon () { #Checa se o jogo está aberto
     echo "Aguardando por HoN ..." && let "count+=1" && sleep 10 &&\
      defvar && checkhon
   fi
-
 }
 defvar
 checkhon
